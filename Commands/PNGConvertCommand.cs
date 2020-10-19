@@ -1,4 +1,5 @@
-﻿using StickersGIFBot.Models;
+﻿using GroupDocs.Conversion.FileTypes;
+using StickersGIFBot.Models;
 using StickersGIFBot.Models.Commands;
 using System;
 using System.Collections.Generic;
@@ -10,14 +11,15 @@ using Telegram.Bot.Types.Enums;
 
 namespace StickersGIFBot.Commands
 {
-    public class StartCommand : Command
+    public class PNGConvertCommand : Command
     {
-        public override string Name => @"/start";
+        public override string Name => @"/png_conversion";
 
         public override async void Execute(Message message, TelegramBotClient botClient)
         {
+            Bot.FormatToConvert = ImageFileType.Png;
             var chatId = message.Chat.Id;
-            await botClient.SendTextMessageAsync(chatId, "Hello I'm bot to convert stickers & emoji to .gif format. Try to send me sticker or emoji!");
+            await botClient.SendTextMessageAsync(chatId, "Conversion format: .png");
         }
     }
 }
