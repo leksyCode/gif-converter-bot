@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using GroupDocs.Conversion;
 using GroupDocs.Conversion.Options.Convert;
+using ImageResizer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using StickersGIFBot.Models;
@@ -16,14 +18,12 @@ namespace StickersGIFBot.Controllers
 {    
     [Route("api/message/update")] // webhook
     public class MessageController : Controller
-    {
-      
-
+    {     
         // GET api/message/update
         [HttpGet]
         public string Get()
         {
-            return "Endpoint for webhooks";
+            return "Endpoint for webhooks 2.0";
         }
 
         // POST api/message/update
@@ -43,34 +43,43 @@ namespace StickersGIFBot.Controllers
                 await botClient.SendTextMessageAsync(message.Chat, string.Format("Associated emoji: {0}\nAnimeted: {1}\nPack: {2}",
                     message.Sticker.Emoji, message.Sticker.IsAnimated, message.Sticker.SetName), replyToMessageId: message.MessageId);
 
+             
                 try
                 {
                     // Download sticker
                     var file = await botClient.GetFileAsync(message.Sticker.FileId);
-                    var localSavePath = "..\\" + message.Sticker.FileUniqueId + ".webp";
-                   
+
+                    var localSavePath = "/app/tgs-to-gif/bin/tgs_to_gif/" + message.Sticker.FileUniqueId + ".tgs";
+                    var localUplaodPath = "/app/tgs-to-gif/bin/tgs_to_gif/" + message.Sticker.FileUniqueId + ".gif";
+                    var commandToStartProgram = "/app/tgs-to-gif/bin/tgs_to_gif " + localSavePath + " -o " + localUplaodPath;
+
+                    //var localSavePath = "/app/tgs-to-gif/bin/tgs_to_gif/" + message.Sticker.FileUniqueId + ".tgs";
+                    //var localUplaodPath = "/app/tgs-to-gif/bin/tgs_to_gif/" + message.Sticker.FileUniqueId + ".tgs.gif";
+
                     using (var saveImageStream = new FileStream(localSavePath, FileMode.Create))
                     {
                         await botClient.DownloadFileAsync(file.FilePath, saveImageStream);
-
                     }
 
                     // Convert sticker 
-                    var localUplaodPath = "..\\" + message.Sticker.FileUniqueId + "." + format.ToString();
-                                      
-                    using (Converter converter = new Converter(localSavePath))
-                    {
-                        ImageConvertOptions options = new ImageConvertOptions
-                        { // Set the conversion format
-                            Format = format
-                        };
-                        converter.Convert(localUplaodPath, options);
-                    }
+                   
+                    ExecuteCommand(commandToStartProgram);
+
+
+
+                    //using (Converter converter = new Converter(localSavePath))
+                    //{
+                    //    ImageConvertOptions options = new ImageConvertOptions
+                    //    { // Set the conversion format
+                    //        Format = format
+                    //    };
+                    //    converter.Convert(localUplaodPath, options);
+                    //}
 
                     // Upload sticker
                     using (FileStream fs = System.IO.File.OpenRead(localUplaodPath))
                     {
-                        InputOnlineFile inputOnlineFile = new InputOnlineFile(fs, message.Sticker.FileUniqueId + "." + format.ToString());
+                        InputOnlineFile inputOnlineFile = new InputOnlineFile(fs, message.Sticker.FileUniqueId + ".gif");
                         await botClient.SendDocumentAsync(message.Chat, inputOnlineFile);
                     }
 
@@ -78,11 +87,8 @@ namespace StickersGIFBot.Controllers
                 catch (Exception e )
                 {
                     await botClient.SendTextMessageAsync(message.Chat, "Server error. \n " + e.Message);
-
                 }
 
-                //await botClient.SendTextMessageAsync(message.Chat, string.Format("Associated emoji:{0}\nAnimeted:{1}\nstickers pack:{2}",
-                //    message.Sticker.Emoji, message.Sticker.IsAnimated, message.Sticker.ToString()), replyToMessageId: message.MessageId);
             }
 
             // for commands
@@ -98,6 +104,22 @@ namespace StickersGIFBot.Controllers
 
             return Ok();
         }
+
+        public static void ExecuteCommand(string command)
+        {
+            Process proc = new Process();
+            proc.StartInfo.FileName = "/bin/bash";
+            proc.StartInfo.Arguments = "-c \" " + command + " \"";
+            proc.StartInfo.UseShellExecute = false;
+            proc.StartInfo.RedirectStandardOutput = true;
+            proc.Start();
+
+            while (!proc.StandardOutput.EndOfStream)
+            {
+                Console.WriteLine(proc.StandardOutput.ReadLine());
+            }
+        }
+
 
     }
 }
