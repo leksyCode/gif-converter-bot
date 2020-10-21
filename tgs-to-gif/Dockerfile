@@ -1,5 +1,4 @@
 FROM alpine
-MAINTAINER Ed Asriyan <ed-asriyan@protonmail.com>
 
 RUN apk update && \
     apk --no-cache add \

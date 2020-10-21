@@ -4,9 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using GroupDocs.Conversion;
-using GroupDocs.Conversion.Options.Convert;
-using ImageResizer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using StickersGIFBot.Models;
@@ -30,7 +27,7 @@ namespace StickersGIFBot.Controllers
         // POST api/message/update
         [HttpPost]
         public async Task<OkResult> Post([FromBody]Update update)
-        {
+        {            
             if (update == null) return Ok();
 
             var commands = Bot.Commands;
@@ -98,7 +95,7 @@ namespace StickersGIFBot.Controllers
 
         public static string ExecuteCommand(string command)
         {
-            var result = command + " command output: ";
+            var result = command + " command output: \n";
 
             Process proc = new Process();
             proc.StartInfo.FileName = "/bin/bash";
