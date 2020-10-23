@@ -1,9 +1,8 @@
-﻿using GroupDocs.Conversion.FileTypes;
+﻿using Cloudmersive.APIClient.NET.DocumentAndDataConvert.Client;
 using StickersGIFBot.Commands;
 using StickersGIFBot.Models.Commands;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Telegram.Bot;
 
@@ -19,10 +18,14 @@ namespace StickersGIFBot.Models
   
         public static async Task<TelegramBotClient> GetBotClientAsync()
         {
+            
             if (botClient != null)
             {
                 return botClient;
             }
+
+            // confidure apikey for webp conversion api
+            Configuration.Default.AddApiKey("Apikey", "44580530-15f0-4f25-b602-60a402cb06e2");
 
             commandsList = new List<Command>();
             commandsList.Add(new StartCommand());

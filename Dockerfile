@@ -7,10 +7,10 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src
-COPY ["StickersGIFBot.csproj", "./"]
-RUN dotnet restore "StickersGIFBot.csproj"
+COPY ["StickersGIFBot.csproj", ""]
+RUN dotnet restore "./StickersGIFBot.csproj"
 COPY . .
-WORKDIR "/src/"
+WORKDIR "/src/."
 RUN dotnet build "StickersGIFBot.csproj" -c Release -o /app/build
 
 FROM build AS publish
@@ -18,7 +18,7 @@ RUN dotnet publish "StickersGIFBot.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
- 
+
 RUN apt-get update
 RUN apt-get install -y git g++ cmake python-pip
 RUN pip install conan

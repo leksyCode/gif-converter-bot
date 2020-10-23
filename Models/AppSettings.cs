@@ -8,8 +8,10 @@ namespace StickersGIFBot.Models
 
     public static class AppSettings
     {
+
+
         public static string Url { get; set; } = "https://stickersbot.azurewebsites.net/{0}";
         public static string Name { get; set; } = "stickersgif_bot";
-        public static string ApiKey { get; set; } = "1235457299:AAHZ34y6hcKvksbSPDfd9J80jyAuJFt_jsU";
+        public static string ApiKey { get; set; } = "1387854329:AAFs-crx90G6cnjlyFg7Q-LYyWmV90LCawc";
     }
 }
