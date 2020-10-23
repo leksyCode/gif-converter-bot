@@ -19,7 +19,7 @@ RUN dotnet publish "StickersGIFBot.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 
-RUN apt-get update
+RUN apt-get update && apt-get -y install libxml2 libgdiplus libc6-dev
 RUN apt-get install -y git g++ cmake python-pip
 RUN pip install conan
 COPY --from=build /src/tgs-to-gif /app/tgs-to-gif

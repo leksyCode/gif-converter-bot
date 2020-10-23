@@ -9,24 +9,26 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 using System.Drawing;
+using System.Threading;
 
 namespace StickersGIFBot.Controllers
 {
     [Route("api/message/update")] // webhook
     public class MessageController : Controller
     {
+        
         // GET api/message/update
         [HttpGet]
         public string Get()
-        {
-            
+        {            
             var output = ExecuteCommand("dir");
-            return "Endpoint for webhooks v3.0 -> https://t.me/stickersgif_bot \n Files in linux container: \n" + output;
+            return "Endpoint for webhooks v3.3 -> https://t.me/stickersgif_bot \n Files in linux container: \n" + output;
         }
+
 
         // POST api/message/update
         [HttpPost]
-        public async Task<OkResult> Post([FromBody]Update update)
+        public async Task<OkResult> PostAsync([FromBody]Update update)
         {
             if (update == null) return Ok();
 
@@ -34,6 +36,10 @@ namespace StickersGIFBot.Controllers
             var message = update.Message;
             var botClient = await Bot.GetBotClientAsync();
 
+            // Set the maximum number of parallel executing threads and the method of processing a sticker to the queue
+            ThreadPool.SetMaxThreads(10, 10);
+            ThreadPool.QueueUserWorkItem(ProcessSticker, update);
+        
             // for Debugging remote container
             // executing any message command from bot container in bash
             if (message.Type == MessageType.Text)
@@ -41,22 +47,45 @@ namespace StickersGIFBot.Controllers
                 if (Bot.DebugMode == true)
                 {
                     await botClient.SendTextMessageAsync(message.Chat, ExecuteCommand(message.Text), parseMode: ParseMode.MarkdownV2, replyToMessageId: message.MessageId);
-                }               
+                }
             }
+
+            // for bot commands
+            foreach (var command in commands)
+            {
+                if (command.Contains(message))
+                {
+                    command.Execute(message, botClient);
+                    break;
+                }
+            }
+
+            return Ok();
+        }
+
+        public async void ProcessSticker(object state)
+        {
+            Update update = state as Update;
+
+            var commands = Bot.Commands;
+            var message = update.Message;
+            var botClient = await Bot.GetBotClientAsync();
 
 
             // for stickers
             if (message.Type == MessageType.Sticker)
             {
                 var file = await botClient.GetFileAsync(message.Sticker.FileId);
-                await botClient.SendTextMessageAsync(message.Chat, string.Format("Associated emoji: {0}\nAnimeted: {1}\nPack: {2}\nConverting ...",
-                    message.Sticker.Emoji, message.Sticker.IsAnimated, message.Sticker.SetName), replyToMessageId: message.MessageId);
+                var mess = string.Format("Associated emoji: {0}\nAnimeted: {1}\nPack: {2}\nConverting ...",
+                    message.Sticker.Emoji, message.Sticker.IsAnimated, message.Sticker.SetName);
+
+                await botClient.SendTextMessageAsync(message.Chat, mess, replyToMessageId: message.MessageId);
 
                 var fileExtension = message.Sticker.IsAnimated ? ".tgs" : ".webp";
 
                 try
                 {
-                   
+
                     var localSavePath = $"/app/tgs-to-gif/cache/{message.Sticker.FileUniqueId + fileExtension}";
                     var localUploadPath = $"/app/tgs-to-gif/cache/{message.Sticker.FileUniqueId}.gif";
 
@@ -81,13 +110,13 @@ namespace StickersGIFBot.Controllers
                         else
                         {
                             ConvertImageApi apiInstance = new ConvertImageApi();
-                            var format1 = "WEBP";
-                            var format2 = "GIF";
+                            var fromFormat = "WEBP";
+                            var toFormat = "GIF";
                             var inputFile = new FileStream(localSavePath, FileMode.Open); // Input file to perform the operation 
 
                             // Image format conversion
-                            byte[] result = apiInstance.ConvertImageImageFormatConvert(format1, format2, inputFile);
-                            MemoryStream ms = new MemoryStream(result);                            
+                            byte[] result = apiInstance.ConvertImageImageFormatConvert(fromFormat, toFormat, inputFile);
+                            MemoryStream ms = new MemoryStream(result);
                             Bitmap bm = new Bitmap(ms);
                             bm.Save(localUploadPath);
                         }
@@ -105,18 +134,6 @@ namespace StickersGIFBot.Controllers
                     await botClient.SendTextMessageAsync(message.Chat, $"Conversion {fileExtension} error! \n " + e.Message);
                 }
             }
-
-            // for bot commands
-            foreach (var command in commands)
-            {
-                if (command.Contains(message))
-                {
-                    command.Execute(message, botClient);
-                    break;
-                }
-            }
-
-            return Ok();
         }
 
         /// <summary>

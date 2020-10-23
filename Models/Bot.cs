@@ -3,6 +3,7 @@ using StickersGIFBot.Commands;
 using StickersGIFBot.Models.Commands;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
 
@@ -14,11 +15,9 @@ namespace StickersGIFBot.Models
         private static List<Command> commandsList;
         public static IReadOnlyList<Command> Commands => commandsList.AsReadOnly();
         public static bool DebugMode { get; set; } = false;
-
-  
+        
         public static async Task<TelegramBotClient> GetBotClientAsync()
-        {
-            
+        {            
             if (botClient != null)
             {
                 return botClient;

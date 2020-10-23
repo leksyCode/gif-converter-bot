@@ -21,7 +21,7 @@ namespace StickersGIFBot.Commands
             else
                 Bot.DebugMode = false;
 
-            await botClient.SendTextMessageAsync(message.Chat, $"```Debug mode: {Bot.DebugMode}. In debug mode you have access to bash!\n You can execute commands one by one like 'cd /app; ls'```",  parseMode: ParseMode.Markdown);
+            await botClient.SendTextMessageAsync(message.Chat, $"```Debug mode: {Bot.DebugMode}. In debug mode you have access to bash!\n You can execute commands one by one like 'cd /cache; ls'```",  parseMode: ParseMode.Markdown);
         }
     }
 }
